@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Global.h"
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -180,6 +181,10 @@ public:
         assert(s != 0);
         T inv = 1 / s;
         return Vector3(x * inv, y * inv, z * inv);
+    }
+
+    __host__ __device__ Vector3<T> operator/(const Vector3<T> &v) const {
+        return Vector3(x / v.x, y / v.y, z / v.z);
     }
 
     __host__ __device__ Vector3<T> &operator/=(T s) {
@@ -436,3 +441,35 @@ public:
 
 typedef Vector4<float> Vector4f;
 typedef Vector4<int> Vector4i;
+
+template <typename T> class Bounds2 {
+public:
+    __host__ __device__ Bounds2() {
+        T minNum = std::numeric_limits<T>::lowest();
+        T maxNum = std::numeric_limits<T>::max();
+        pMin = Vector2<T>(maxNum, maxNum);
+        pMax = Vector2<T>(minNum, minNum);
+    }
+
+    __host__ __device__ Bounds2(const Vector2<T> &p) : pMin(p), pMax(p) {}
+
+    __host__ __device__ Bounds2(const Vector2<T> &p1, const Vector2<T> &p2) {
+        pMin = Vector2<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y));
+        pMax = Vector2<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
+    }
+
+    __host__ __device__ Vector2<T> Diagonal() const { return pMax - pMin; }
+
+    __host__ __device__ T Area() const {
+        Vector2<T> d = Diagonal();
+        return d.x * d.y;
+    }
+
+    __host__ __device__ int MaximumExtent() const {
+        Vector2<T> d = Diagonal();
+        return d.x > d.y ? 0 : 1;
+    }
+
+public:
+    Vector2<T> pMin, pMax;
+}
